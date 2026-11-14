@@ -1,0 +1,113 @@
+{
+  "entities": {
+    "StoreWorkspace": {
+      "title": "StoreWorkspace",
+      "description": "Shop workspace metadata controlling multi-device sync and optional owner privacy lock.",
+      "type": "object",
+      "properties": {
+        "storeId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "storeName": { "type": "string", "maxLength": 128 },
+        "ownerUid": { "type": "string", "maxLength": 128 },
+        "isPrivate": { "type": "boolean" },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["storeId", "isPrivate"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Store-scoped product inventory item with real-time stock levels across linked cashier devices.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "storeId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128 },
+        "sku": { "type": "string", "maxLength": 64 },
+        "name": { "type": "string", "maxLength": 256 },
+        "category": { "type": "string", "maxLength": 64 },
+        "price": { "type": "number" },
+        "stock": { "type": "number" },
+        "barcode": { "type": "string", "maxLength": 128 },
+        "badge": { "type": "string", "maxLength": 64 },
+        "purity": { "type": "string", "maxLength": 32 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "image": { "type": "string", "maxLength": 512000 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "storeId", "sku", "name", "category", "price", "stock", "barcode"]
+    },
+    "Sale": {
+      "title": "Sale",
+      "description": "Immutable completed transaction record synchronized across all registers within a store.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "storeId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128 },
+        "timestamp": { "type": "string", "maxLength": 64 },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "discountAmount": { "type": "number" },
+        "taxAmount": { "type": "number" },
+        "total": { "type": "number" },
+        "paymentMethod": { "type": "string", "maxLength": 32 },
+        "cashierName": { "type": "string", "maxLength": 128 },
+        "registerId": { "type": "string", "maxLength": 64 },
+        "loyaltyMember": { "type": "object" },
+        "syncedFromOffline": { "type": "boolean" },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "storeId", "timestamp", "items", "subtotal", "discountAmount", "taxAmount", "total", "paymentMethod", "cashierName", "registerId"]
+    },
+    "DailyStats": {
+      "title": "DailyStats",
+      "description": "Aggregated daily sales analytics synchronized across a store's multi-device POS network.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "storeId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "totalSales": { "type": "number" },
+        "itemsSold": { "type": "number" },
+        "transactionsCount": { "type": "number" },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "storeId", "totalSales", "itemsSold", "transactionsCount"]
+    },
+    "DeviceSession": {
+      "title": "DeviceSession",
+      "description": "Connected cashier device or terminal in the store's multi-user network.",
+      "type": "object",
+      "properties": {
+        "deviceId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "storeId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "deviceName": { "type": "string", "maxLength": 128 },
+        "platform": { "type": "string", "maxLength": 64 },
+        "registerId": { "type": "string", "maxLength": 64 },
+        "cashierName": { "type": "string", "maxLength": 128 },
+        "lastActive": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["deviceId", "storeId", "deviceName", "registerId", "cashierName", "lastActive"]
+    }
+  },
+  "firestore": {
+    "/stores/{storeId}": {
+      "schema": { "$ref": "#/entities/StoreWorkspace" },
+      "description": "Store workspace metadata for multi-tenant isolation."
+    },
+    "/stores/{storeId}/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Store-scoped real-time inventory repository shared across linked devices."
+    },
+    "/stores/{storeId}/sales/{saleId}": {
+      "schema": { "$ref": "#/entities/Sale" },
+      "description": "Store-scoped immutable sales ledger recording all completed checkouts."
+    },
+    "/stores/{storeId}/dailyStats/{statsId}": {
+      "schema": { "$ref": "#/entities/DailyStats" },
+      "description": "Store-wide consolidated daily financial and item count statistics."
+    },
+    "/stores/{storeId}/devices/{deviceId}": {
+      "schema": { "$ref": "#/entities/DeviceSession" },
+      "description": "Active register terminal presence and status in the store's multi-device network."
+    }
+  }
+}

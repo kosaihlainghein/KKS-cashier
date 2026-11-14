@@ -1,0 +1,6 @@
+{
+  "name": "KKS Cashier",
+  "description": "High-end luxury cyberpunk point-of-sale system in Gold Mode with holographic barcode scanner, real-time store monitoring, and analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

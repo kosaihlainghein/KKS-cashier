@@ -1,0 +1,192 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidStoreId(storeId) {
+      return storeId is string && storeId.size() >= 3 && storeId.size() <= 64 && storeId.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isStoreAccessibleForWrite(storeId) {
+      return !exists(/databases/$(database)/documents/stores/$(storeId))
+        || get(/databases/$(database)/documents/stores/$(storeId)).data.isPrivate == false
+        || (isSignedIn() && get(/databases/$(database)/documents/stores/$(storeId)).data.ownerUid == request.auth.uid);
+    }
+
+    function isStoreReadable(storeId) {
+      return !exists(/databases/$(database)/documents/stores/$(storeId))
+        || get(/databases/$(database)/documents/stores/$(storeId)).data.isPrivate == false
+        || (isSignedIn() && get(/databases/$(database)/documents/stores/$(storeId)).data.ownerUid == request.auth.uid);
+    }
+
+    function isValidStoreWorkspace(data, storeId) {
+      return data.keys().hasAll(['storeId', 'isPrivate'])
+        && data.keys().hasOnly(['storeId', 'storeName', 'ownerUid', 'isPrivate', 'updatedAt'])
+        && data.storeId == storeId
+        && data.isPrivate is bool
+        && (!('storeName' in data) || (data.storeName is string && data.storeName.size() <= 128))
+        && (!('ownerUid' in data) || (data.ownerUid is string && data.ownerUid.size() <= 128))
+        && (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
+    function isValidProduct(data, storeId, productId) {
+      return data.keys().hasAll(['id', 'storeId', 'sku', 'name', 'category', 'price', 'stock', 'barcode'])
+        && data.keys().hasOnly(['id', 'storeId', 'ownerUid', 'sku', 'name', 'category', 'price', 'stock', 'barcode', 'badge', 'purity', 'description', 'image', 'updatedAt'])
+        && data.id == productId
+        && data.storeId == storeId
+        && (!('ownerUid' in data) || (data.ownerUid is string && data.ownerUid.size() <= 128))
+        && data.sku is string && data.sku.size() >= 1 && data.sku.size() <= 64
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 256
+        && data.category is string && data.category.size() >= 1 && data.category.size() <= 64
+        && data.price is number && data.price >= 0 && data.price <= 1000000000
+        && data.stock is number && data.stock >= 0 && data.stock <= 10000000
+        && data.barcode is string && data.barcode.size() <= 128
+        && (!('badge' in data) || (data.badge is string && data.badge.size() <= 64))
+        && (!('purity' in data) || (data.purity is string && data.purity.size() <= 32))
+        && (!('description' in data) || (data.description is string && data.description.size() <= 1000))
+        && (!('image' in data) || (data.image is string && data.image.size() <= 512000))
+        && (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
+    function isValidSale(data, storeId, saleId) {
+      return data.keys().hasAll(['id', 'storeId', 'timestamp', 'items', 'subtotal', 'discountAmount', 'taxAmount', 'total', 'paymentMethod', 'cashierName', 'registerId'])
+        && data.keys().hasOnly(['id', 'storeId', 'ownerUid', 'timestamp', 'items', 'subtotal', 'discountAmount', 'taxAmount', 'total', 'paymentMethod', 'cashierName', 'registerId', 'loyaltyMember', 'syncedFromOffline', 'createdAt'])
+        && data.id == saleId
+        && data.storeId == storeId
+        && (!('ownerUid' in data) || (data.ownerUid is string && data.ownerUid.size() <= 128))
+        && data.timestamp is string && data.timestamp.size() >= 1 && data.timestamp.size() <= 64
+        && data.items is list && data.items.size() >= 1 && data.items.size() <= 200 && data.items[0] is map
+        && data.subtotal is number && data.subtotal >= 0
+        && data.discountAmount is number && data.discountAmount >= 0
+        && data.taxAmount is number && data.taxAmount >= 0
+        && data.total is number && data.total >= 0
+        && data.paymentMethod in ['cash', 'card', 'mobile', 'bank_transfer']
+        && data.cashierName is string && data.cashierName.size() >= 1 && data.cashierName.size() <= 128
+        && data.registerId is string && data.registerId.size() >= 1 && data.registerId.size() <= 64
+        && (!('loyaltyMember' in data) || data.loyaltyMember == null || data.loyaltyMember is map)
+        && (!('syncedFromOffline' in data) || data.syncedFromOffline is bool)
+        && (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 64));
+    }
+
+    function isValidDailyStats(data, storeId, statsId) {
+      return data.keys().hasAll(['id', 'storeId', 'totalSales', 'itemsSold', 'transactionsCount'])
+        && data.keys().hasOnly(['id', 'storeId', 'totalSales', 'itemsSold', 'transactionsCount', 'updatedAt'])
+        && data.id == statsId
+        && data.storeId == storeId
+        && data.totalSales is number && data.totalSales >= 0
+        && data.itemsSold is number && data.itemsSold >= 0
+        && data.transactionsCount is number && data.transactionsCount >= 0
+        && (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
+    function isValidDevice(data, storeId, deviceId) {
+      return data.keys().hasAll(['deviceId', 'storeId', 'deviceName', 'registerId', 'cashierName', 'lastActive'])
+        && data.keys().hasOnly(['deviceId', 'storeId', 'deviceName', 'registerId', 'cashierName', 'platform', 'lastActive'])
+        && data.deviceId == deviceId
+        && data.storeId == storeId
+        && data.deviceName is string && data.deviceName.size() >= 1 && data.deviceName.size() <= 128
+        && data.registerId is string && data.registerId.size() >= 1 && data.registerId.size() <= 64
+        && data.cashierName is string && data.cashierName.size() >= 1 && data.cashierName.size() <= 128
+        && (!('platform' in data) || (data.platform is string && data.platform.size() <= 64))
+        && data.lastActive is string && data.lastActive.size() >= 1 && data.lastActive.size() <= 64;
+    }
+
+    function canListStoreResource(data, storeId) {
+      return data.storeId == storeId
+        && (!('ownerUid' in data) || data.ownerUid == '' || (isSignedIn() && data.ownerUid == request.auth.uid));
+    }
+
+    // Health check / test connection
+    match /test/connection {
+      allow get: if true;
+    }
+
+    // Store Workspace Metadata & Optional Privacy Lock
+    match /stores/{storeId} {
+      allow get: if isValidStoreId(storeId) && (
+        !existing().isPrivate || (isSignedIn() && existing().ownerUid == request.auth.uid)
+      );
+      allow list: if false;
+      allow create: if isValidStoreId(storeId)
+        && isValidStoreWorkspace(incoming(), storeId)
+        && (!incoming().isPrivate || (isSignedIn() && incoming().ownerUid == request.auth.uid));
+      allow update: if isValidStoreId(storeId)
+        && isValidStoreWorkspace(incoming(), storeId)
+        && incoming().storeId == existing().storeId
+        && (!existing().isPrivate || (isSignedIn() && existing().ownerUid == request.auth.uid))
+        && (!incoming().isPrivate || (isSignedIn() && incoming().ownerUid == request.auth.uid));
+      allow delete: if false;
+
+      // Store-Scoped Product Catalog & Real-Time Stock
+      match /products/{productId} {
+        allow get: if isValidStoreId(storeId) && isValidId(productId) && isStoreReadable(storeId);
+        allow list: if isValidStoreId(storeId) && canListStoreResource(resource.data, storeId);
+        allow create: if isValidStoreId(storeId)
+          && isValidId(productId)
+          && isValidProduct(incoming(), storeId, productId)
+          && isStoreAccessibleForWrite(storeId);
+        allow update: if isValidStoreId(storeId)
+          && isValidId(productId)
+          && isValidProduct(incoming(), storeId, productId)
+          && incoming().id == existing().id
+          && incoming().storeId == existing().storeId
+          && incoming().diff(existing()).affectedKeys().hasOnly(['ownerUid', 'sku', 'name', 'category', 'price', 'stock', 'barcode', 'badge', 'purity', 'description', 'image', 'updatedAt'])
+          && isStoreAccessibleForWrite(storeId);
+        allow delete: if isValidStoreId(storeId) && isValidId(productId) && isStoreAccessibleForWrite(storeId);
+      }
+
+      // Store-Scoped Immutable Sales Transaction Ledger
+      match /sales/{saleId} {
+        allow get: if isValidStoreId(storeId) && isValidId(saleId) && isStoreReadable(storeId);
+        allow list: if isValidStoreId(storeId) && canListStoreResource(resource.data, storeId);
+        allow create: if isValidStoreId(storeId)
+          && isValidId(saleId)
+          && isValidSale(incoming(), storeId, saleId)
+          && isStoreAccessibleForWrite(storeId);
+        allow update, delete: if false;
+      }
+
+      // Store-Scoped Aggregated Daily Sales Statistics
+      match /dailyStats/{statsId} {
+        allow get: if isValidStoreId(storeId) && isValidId(statsId) && isStoreReadable(storeId);
+        allow list: if isValidStoreId(storeId) && resource.data.storeId == storeId;
+        allow create, update: if isValidStoreId(storeId)
+          && isValidId(statsId)
+          && isValidDailyStats(incoming(), storeId, statsId)
+          && isStoreAccessibleForWrite(storeId);
+        allow delete: if false;
+      }
+
+      // Store-Scoped Multi-Device Registry Presence
+      match /devices/{deviceId} {
+        allow get: if isValidStoreId(storeId) && isValidId(deviceId) && isStoreReadable(storeId);
+        allow list: if isValidStoreId(storeId) && resource.data.storeId == storeId;
+        allow create, update: if isValidStoreId(storeId)
+          && isValidId(deviceId)
+          && isValidDevice(incoming(), storeId, deviceId)
+          && isStoreAccessibleForWrite(storeId);
+        allow delete: if isValidStoreId(storeId) && isValidId(deviceId) && isStoreAccessibleForWrite(storeId);
+      }
+    }
+  }
+}

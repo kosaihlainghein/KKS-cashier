@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build & Runtime Outputs
+build/
+dist/
+coverage/
+drizzle/
+server.js
+
+# Environment & Secrets (NEVER commit secrets to GitHub)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*service-account*.json
+*serviceAccount*.json
+*adminsdk*.json
+
+# Local Database & Draft Artifacts
+data/
+*.sqlite
+*.db
+kks-pos-local-base.json
+DRAFT_firestore.rules
+
+# OS & Logs
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+bun-debug.log*

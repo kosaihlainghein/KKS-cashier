@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --gold-glow: 0 0 25px rgba(245, 183, 0, 0.45);
+    --gold-subtle: 0 0 12px rgba(217, 119, 6, 0.25);
+  }
+}
+
+.font-orbitron {
+  font-family: 'Orbitron', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.font-exo {
+  font-family: 'Exo 2', 'Noto Sans Myanmar', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.font-myanmar {
+  font-family: 'Noto Sans Myanmar', 'Padauk', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Thin Gold Outline effect requested */
+.gold-outline-text {
+  text-shadow: 
+    -0.5px -0.5px 0 rgba(245, 183, 0, 0.7),
+     0.5px -0.5px 0 rgba(245, 183, 0, 0.7),
+    -0.5px  0.5px 0 rgba(245, 183, 0, 0.7),
+     0.5px  0.5px 0 rgba(245, 183, 0, 0.7),
+     0 0 10px rgba(245, 183, 0, 0.5);
+}
+
+.gold-gradient-border {
+  border: 1px solid transparent;
+  background-clip: padding-box, border-box;
+  background-origin: padding-box, border-box;
+}
+
+/* Gold neon pulse & ripple effects */
+@keyframes gold-beam-sweep {
+  0% {
+    top: 5%;
+    opacity: 0.2;
+  }
+  50% {
+    top: 85%;
+    opacity: 1;
+    filter: drop-shadow(0 0 12px #fbbf24);
+  }
+  100% {
+    top: 5%;
+    opacity: 0.2;
+  }
+}
+
+@keyframes holographic-flicker {
+  0%, 100% { opacity: 0.95; }
+  45% { opacity: 0.85; }
+  50% { opacity: 1; }
+  75% { opacity: 0.9; }
+}
+
+@keyframes gold-ripple {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(245, 183, 0, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 14px rgba(245, 183, 0, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 183, 0, 0);
+  }
+}
+
+.animate-gold-beam {
+  animation: gold-beam-sweep 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-holo {
+  animation: holographic-flicker 5s infinite;
+}
+
+.btn-gold-ripple {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-gold-ripple:hover {
+  box-shadow: 0 0 24px rgba(245, 183, 0, 0.5), inset 0 0 12px rgba(254, 240, 138, 0.3);
+}
+
+.btn-gold-ripple:active {
+  transform: scale(0.98);
+}
+
+/* Custom scrollbar in dark gold */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 15, 20, 0.8);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(217, 119, 6, 0.35);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 183, 0, 0.6);
+}
